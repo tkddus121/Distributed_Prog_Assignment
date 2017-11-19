@@ -33,7 +33,25 @@ void img_flip_horizentally(PPMImage *img)
 
 void img_grayscale(PPMImage *img)
 {
-;
+	int H = img->height , W = img->width;
+
+	for(int i = 0 ; i < H ; ++i)
+	{
+		for(int j = 0 ; j < W ;j++)
+		{
+			unsigned char avg = ( img->pixels[i * W + j].R
+								+ img->pixels[i * W + j].G
+								+ img->pixels[i * W + j].B)/3;
+
+			img->pixels[i * W + j].R = avg;
+			img->pixels[i * W + j].G = avg;
+			img->pixels[i * W + j].B = avg;
+
+		}
+
+	}
+	
+	;
 
 }
 
