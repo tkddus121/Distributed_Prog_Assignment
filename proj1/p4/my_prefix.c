@@ -17,11 +17,42 @@ void getElapsedTime(struct timeval Tstart, struct timeval Tend)
     printf("Elapsed Time: %lf sec\n", Tend.tv_usec / 1000000.0);
 }
 
+int prefix_sum(int rank,int num,int *val)
+{
+	int arrow, step = 1;
+	//Phase 1
+
+//	printf("%d %d %d\n",rank,num,*val);
+
+
+	for(step = 1; step < num;step *=2)
+	{
+		//send
+		//
+		if(rank + step < num)
+		{
+			MPI_Send(val, 1, MPI_INT, rank + step, 0, MPI_COMM_WORLD);
+			//printf("send %d to %d\n",rank,rank+step);
+		}
+		if( rank > 0 && rank - step >= 0)
+		{
+			MPI_Status stat;
+			int tmp;
+
+			MPI_Recv(&tmp, 1, MPI_INT, rank - step, 0, MPI_COMM_WORLD, &stat);
+			*val += tmp;
+		}
+	}
+
+
+}
+
+
 int main( int  argc, char **argv)
 {
 
 	int rank, num,size, i;
-	int *dataset, localdata, localrecv;
+	int *dataset, data, ori_data;
 
 	struct timeval Tstart, Tend; //time value
 
@@ -40,18 +71,17 @@ int main( int  argc, char **argv)
 	}
 
 	srand((rank*3+1)*time(NULL));
+    
 
-	//generate random value.
-    localdata = rand()%RANDOM_MAX;
-    printf("[Process %d]: has data %d\n", rank, localdata);
+	data = rand()%RANDOM_MAX;
+	ori_data = data;
+    prefix_sum(rank,num,&data);
 
-    //MPI_Scan(sendbuf,recvbuf, count, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-	//
-    MPI_Scan(&localdata,&localrecv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
-    //synchronize
-    MPI_Barrier(MPI_COMM_WORLD);
-    printf("[Process %d]: has received data: %d \n", rank,localrecv);
+	printf("[Process %d of %d. ori = %d, result = %d\n",rank, num , ori_data,data);  
+	
+	
+	MPI_Barrier(MPI_COMM_WORLD);
 
 	//print time.
 	if (rank == 0)
