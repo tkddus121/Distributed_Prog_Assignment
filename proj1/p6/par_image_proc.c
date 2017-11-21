@@ -23,7 +23,7 @@ void getElapsedTime(struct timeval Tstart, struct timeval Tend)
 
     printf("Elapsed Time: %lf sec\n", Tend.tv_usec / 1000000.0);
 }
-
+/*
 void derived_RGB_Type()
 {
 	RGB sample;
@@ -47,6 +47,35 @@ void derived_RGB_Type()
 
 
 }
+
+*/
+
+void derived_RGB_Type()
+{
+	RGB sample;
+
+	int blklen[3];
+	MPI_Aint displ[3], off, base;
+	MPI_Datatype types[3];
+
+	blklen[0] = blklen[1] = blklen[2] = 1;
+
+	types[0] = types[1] = types[2] = MPI_UNSIGNED_CHAR;
+
+	displ[0] = 0;
+	MPI_Get_address(&sample.R, &base);
+	MPI_Get_address(&sample.G, &off);
+	displ[1] = off - base;
+	MPI_Get_address(&sample.B, &off);
+	displ[2] = off - base;
+
+	MPI_Type_create_struct(3, blklen, displ, types, &RGB_type);
+	MPI_Type_commit(&RGB_type);
+}
+
+
+
+
 void merge_results(RGB *merged, int *recvcounts, int *displs,
 				   RGB *results, int block_cnt)
 {
@@ -140,7 +169,7 @@ void flip_and_grey(RGB *input, int blk_cnt, int blk_size)
 
 
 		//grey
-		for(int j = 0 ; j < blk_size; j++)
+		for(int j = 0 ; j < blk_size; ++j)
 		{
 			int avg = ( (int) blk_ptr[j].R + blk_ptr[j].G + blk_ptr[j].B)/3;
 			blk_ptr[j].R = avg;
