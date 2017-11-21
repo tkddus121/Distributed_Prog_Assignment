@@ -130,14 +130,6 @@ void flip_and_grey(RGB *input, int blk_cnt, int blk_size)
 	//grey
 	for(int i = 0 ; i < blk_cnt ; ++i)
 	{
-		//grey
-		for(int j = 0 ; j < blk_size; j++)
-		{
-			int avg = ( (int) blk_ptr[j].R + blk_ptr[j].G + blk_ptr[j].B)/3;
-			blk_ptr[j].R = avg;
-			blk_ptr[j].B = avg;
-			blk_ptr[j].G = avg;
-		}
 		//flip
 		for(int j = 0 ; j < blk_size/2 ; ++j)
 		{
@@ -147,6 +139,14 @@ void flip_and_grey(RGB *input, int blk_cnt, int blk_size)
 		}
 
 
+		//grey
+		for(int j = 0 ; j < blk_size; j++)
+		{
+			int avg = ( (int) blk_ptr[j].R + blk_ptr[j].G + blk_ptr[j].B)/3;
+			blk_ptr[j].R = avg;
+			blk_ptr[j].B = avg;
+			blk_ptr[j].G = avg;
+		}
 
 	}
 
