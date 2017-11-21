@@ -127,7 +127,7 @@ void flip_and_grey(RGB *input, int blk_cnt, int blk_size)
 	RGB *blk_ptr = input;
 
 	//grey
-	for(int i = 0 ; i < blk_cnt ; ++i)
+	for(int i = 0 ; i < blk_cnt ; ++i, blk_ptr += blk_size)
 	{
 		//flip
 		for(int j = 0 ; j < blk_size/2 ; ++j)
