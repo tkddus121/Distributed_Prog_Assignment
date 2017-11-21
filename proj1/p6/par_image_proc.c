@@ -47,6 +47,18 @@ void derived_RGB_Type()
 
 
 }
+void merge_results(RGB *merged, int *recvcounts, int *displs,
+				   RGB *results, int block_cnt)
+{
+	int err = MPI_Gatherv(results, block_cnt, RGB_RowGroup_type,
+						  merged, recvcounts, displs,
+						  RGB_RowGroup_type, root, MPI_COMM_WORLD);
+
+	if (err != MPI_SUCCESS)
+		printf("error occur!\n");
+}
+
+
 void derived_Pixel_Type()
 {
 	PIXEL sample;
@@ -111,6 +123,38 @@ void scatter_img_block(RGB *sendbuf, int send_block_cnt,
 			root, MPI_COMM_WORLD);
 }
 
+void flip_and_grey(RGB *input, int blk_cnt, int blk_size)
+{
+	RGB *blk_ptr = input;
+
+	//grey
+	for(int i = 0 ; i < blk_cnt ; ++i)
+	{
+		//grey
+		for(int j = 0 ; j < blk_size; j++)
+		{
+			int avg = ( (int) blk_ptr[j].R + blk_ptr[j].G + blk_ptr[j].B)/3;
+			blk_ptr[j].R = avg;
+			blk_ptr[j].B = avg;
+			blk_ptr[j].G = avg;
+		}
+		//flip
+		for(int j = 0 ; j < blk_size/2 ; ++j)
+		{
+			RGB tmp = blk_ptr[j];
+			blk_ptr[j] = blk_ptr[blk_size - j -1];
+			blk_ptr[blk_size - j -1] = tmp;
+		}
+
+
+
+	}
+
+}
+
+
+
+
 
 
 int main(int argc, char *argv[])
@@ -150,6 +194,7 @@ int main(int argc, char *argv[])
 	RGB *data = NULL;
 	int data_block_cnt;
 	int *counts = NULL, *displs = NULL;
+
 	scatter_img_block(img.pixels, height,
 					  &counts, &displs,
 					  &data, &data_block_cnt, width);
@@ -157,15 +202,19 @@ int main(int argc, char *argv[])
 	printf("[%d] received data block cnt = %d\n", rank, data_block_cnt);
 
 
-	
-	
-	
-	
-	//
-	gettimeofday(&Tend, NULL);
-	getElapsedTime(Tstart, Tend);
+	flip_and_grey(data, data_block_cnt, width);
+	merge_results(img.pixels, counts, displs, data, data_block_cnt);	
 
-	fnWritePPM(argv[2], &img);
-	fnClosePPM(&img);
+	//
+	if(rank == root)
+	{
+		gettimeofday(&Tend, NULL);
+		getElapsedTime(Tstart, Tend);
+
+		fnWritePPM(argv[2], &img);
+		fnClosePPM(&img);
+	}
+	MPI_Finalize();
+	return 0;
 
 }
