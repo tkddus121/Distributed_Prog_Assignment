@@ -23,32 +23,6 @@ void getElapsedTime(struct timeval Tstart, struct timeval Tend)
 
     printf("Elapsed Time: %lf sec\n", Tend.tv_usec / 1000000.0);
 }
-/*
-void derived_RGB_Type()
-{
-	RGB sample;
-	int block_len[3] = {1,};
-	MPI_Datatype types[3];
-	MPI_Aint ad_rgb[3], off, origin;
-
-	types[0] = types[1] = types[2] = MPI_UNSIGNED_CHAR;
-
-	ad_rgb[0] = 0;
-	MPI_Get_address(&sample.R, &origin);	
-	MPI_Get_address(&sample.G, &origin);
-	ad_rgb[1] = off - origin;
-	MPI_Get_address(&sample.B, &origin);
-	ad_rgb[2] = off - origin;
-
-	// for structural type.
-	MPI_Type_create_struct( 3, block_len, ad_rgb, types, &RGB_type);
-	// 
-	MPI_Type_commit(&RGB_type);
-
-
-}
-
-*/
 
 void derived_RGB_Type()
 {
@@ -59,7 +33,6 @@ void derived_RGB_Type()
 	MPI_Datatype types[3];
 
 	blklen[0] = blklen[1] = blklen[2] = 1;
-
 	types[0] = types[1] = types[2] = MPI_UNSIGNED_CHAR;
 
 	displ[0] = 0;
@@ -73,10 +46,7 @@ void derived_RGB_Type()
 	MPI_Type_commit(&RGB_type);
 }
 
-
-
-
-void merge_results(RGB *merged, int *recvcounts, int *displs,
+void merge_data(RGB *merged, int *recvcounts, int *displs,
 				   RGB *results, int block_cnt)
 {
 	int err = MPI_Gatherv(results, block_cnt, RGB_RowGroup_type,
@@ -190,6 +160,10 @@ int main(int argc, char *argv[])
 {
 	int width,height;
 	struct timeval Tstart, Tend; //time value
+	RGB *data = NULL;
+	int data_block_cnt;
+	int *counts = NULL, *displs = NULL;
+
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -220,19 +194,15 @@ int main(int argc, char *argv[])
 	MPI_Type_vector(1, width, 1, RGB_type, &RGB_RowGroup_type);
 	MPI_Type_commit(&RGB_RowGroup_type);
 
-	RGB *data = NULL;
-	int data_block_cnt;
-	int *counts = NULL, *displs = NULL;
-
 	scatter_img_block(img.pixels, height,
 					  &counts, &displs,
 					  &data, &data_block_cnt, width);
 
-	printf("[%d] received data block cnt = %d\n", rank, data_block_cnt);
+	printf("[%d] received block counts = %d\n", rank, data_block_cnt);
 
 
 	flip_and_grey(data, data_block_cnt, width);
-	merge_results(img.pixels, counts, displs, data, data_block_cnt);	
+	merge_data(img.pixels, counts, displs, data, data_block_cnt);	
 
 	//
 	if(rank == root)
