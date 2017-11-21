@@ -44,11 +44,8 @@ void quick_sort(int * begin, int local_size, MPI_Comm comm){
     MPI_Comm_size(comm, &comm_size); 
     MPI_Comm_rank(comm, &rank); 
 
-	// allocate a bigger size for our internal array
-	// because if the pivot is not fair the size of array will be very big
-    int bigger_size = comm_size + 2 * local_size; 
 
-	// allocate an array for recursive sorting which needs to be bigger than local_size
+    int bigger_size = comm_size + 2 * local_size; 
     int* internal_array = (int*)malloc(sizeof(int) * bigger_size);
 
 	//printf("current size is %d common size is %d\n", local_size , comm_size);
@@ -56,9 +53,9 @@ void quick_sort(int * begin, int local_size, MPI_Comm comm){
     // use a new array to store the initial size of array on each processors
     int* initial_sizes = (int*)malloc(sizeof(int) * comm_size);
     MPI_Allgather(&local_size, 1, MPI_INT, &initial_sizes[0], 1, MPI_INT, comm); 
-
 	int i=0; 
-    for( i = 0; i < local_size; i++){
+    for( i = 0; i < local_size; i++)
+	{
         internal_array[i] = begin[i]; 
     }
 
@@ -74,17 +71,12 @@ void quick_sort(int * begin, int local_size, MPI_Comm comm){
     int* recvcounts = (int*)malloc(sizeof(int) * comm_size);
     int* recvdispls = (int*)malloc(sizeof(int) * comm_size); 
 
-
     // calculate sendcounts, senddispls, recvcounts, recvdispls to send it to MPI_Alltoallv to perform merging
     Set_Sending_Size(comm_size, rank, sorted_sizes, initial_sizes, sendcounts, senddispls ); 
 	Set_Receiving_Size(comm_size, rank, sorted_sizes, initial_sizes, recvcounts, recvdispls); 
-    
-	// Sends data from all to all processes
     MPI_Alltoallv(internal_array, sendcounts, senddispls, MPI_INT, begin, recvcounts, recvdispls, MPI_INT, comm); 
 
-
-	// free all allocated temporary arrays
-    
+	// free all allocated temporary arrays    
 	MPI_Barrier(comm); 
     free(internal_array); free(initial_sizes); free(sorted_sizes); 
     free(sendcounts);	  free(senddispls);
@@ -102,13 +94,11 @@ void sort(int* begin, int local_size, MPI_Comm comm)
 
 	if( comm_size <= 1 )
 	{
-		//if processor is 1, we perform  bubble sort.
-		//
-		//
+		//if processor is 1, we perform  bubble sort.\
 		int c = 0 ;
 		int d = 0 ;
 		int swap = 0 ;
-		for (c = 0 ; c < ( local_size - 1 ); c++)
+		for (int c = 0 ; c < ( local_size - 1 ); c++)
 		{
 			for (d = 0 ; d < local_size - c - 1; d++)
 			{
@@ -159,9 +149,11 @@ void sort(int* begin, int local_size, MPI_Comm comm)
 		int pivot = 0; 
 		if(rank == pivot_holder){
 			int z ;			
-			if( pivot_idx < (x + 1) * (y) ){
+			if( pivot_idx < (x + 1) * (y) )
+			{
 				z =  ( pivot_idx % (x + 1) ); 
-			} else{
+			} else
+			{
 				z = ( (pivot_idx - (x + 1) * (y) ) % (x) ); 
 			}			
 			pivot = *(begin + z); 
@@ -295,38 +287,34 @@ void sort(int* begin, int local_size, MPI_Comm comm)
 
 	}
 
-
-
-
-
 }
 
-void Set_Sending_Size(int comm_size, int myrank, int* initial_sizes, int* final_sizes, int* sendcounts, int* senddispls){
-	// the code is for calculating the  sendcounts, senddispls
-	// but it is almost the same for recvcounts, recvdispls
-	// the only difference is that for calculating the 
-	// recvcounts, recvdispls, the initial_sizes and final_sizes should swap
+void Set_Sending_Size(int comm_size, int myrank, int* initial_sizes, int* final_sizes, int* sendcounts, int* senddispls)
+{
+
 	int i = 0 ;
    
-    for(i = 0; i < comm_size; i++){
-        sendcounts[i] = 0; 
-        senddispls[i] = 0;
+    for(i = 0; i < comm_size; i++)
+	{
+        sendcounts[i] = 0;  senddispls[i] = 0;
     }
 	// calculate senders 
-    int residual = initial_sizes[myrank];  
-    int d; 
+    int residual = initial_sizes[myrank],d; 
     int receiver = 0; 
     int right_elements = final_sizes[0]; 
     int total_residuals = 0; 
 	
-    for(i = 0; i < myrank; i++){
+    for(i = 0; i < myrank; i++)
+	{
         total_residuals += initial_sizes[i]; 
     }
     while(total_residuals > 0){
-        if(total_residuals < right_elements){
+        if(total_residuals < right_elements)
+		{
             d = total_residuals; 
             right_elements -= d;
-        } else{
+        } else
+		{
             d = right_elements; 
             receiver += 1; 
             right_elements = final_sizes[receiver];
@@ -334,14 +322,17 @@ void Set_Sending_Size(int comm_size, int myrank, int* initial_sizes, int* final_
         total_residuals -= d; 
     }
     residual = initial_sizes[myrank]; 
-    while(residual > 0){
-        if(residual < right_elements){
+    while(residual > 0)
+	{
+        if(residual < right_elements)
+		{
             d = residual; 
             right_elements -= d; 
             sendcounts[receiver] = d; 
             senddispls[receiver] = initial_sizes[myrank] - residual; 
        
-        } else{
+        } else
+		{
             d = right_elements; 
             sendcounts[receiver] = d; 
             senddispls[receiver] = initial_sizes[myrank] - residual; 
@@ -352,33 +343,33 @@ void Set_Sending_Size(int comm_size, int myrank, int* initial_sizes, int* final_
     }
 }
 
-//##############################################################################
-//##############################################################################
+
 // calculate sendcounts, senddispls, recvcounts, recvdispls to send it to MPI_Alltoallv to perform merging
 void Set_Receiving_Size(int comm_size, int myrank, int* initial_sizes, int* final_sizes, int* recvcounts, int* recvdispls){
-	// the code is for calculating the  sendcounts, senddispls
-	// but it is almost the same for recvcounts, recvdispls
-	// the only difference is that for calculating the 
-	// recvcounts, recvdispls, the initial_sizes and final_sizes should swap
+
 	int i = 0 ; 
-    for(i = 0; i < comm_size; i++){
+    for(i = 0; i < comm_size; i++)
+	{
         recvcounts[i] = 0; 
         recvdispls[i] = 0; 
     }
     // calculate receiver 
-    int residual = final_sizes[myrank]; 
-    int d; 
+    int residual = final_sizes[myrank], d; 
     int sender = 0; 
     int left_elements = initial_sizes[0];
     int total_residuals = 0; 
-    for(i = 0; i < myrank; i++){
+    for(i = 0; i < myrank; i++)
+	{
         total_residuals += final_sizes[i]; 
     }
-    while(total_residuals > 0){
-        if(total_residuals < left_elements){
+    while(total_residuals > 0)
+	{
+        if(total_residuals < left_elements)
+		{
             d = total_residuals; 
             left_elements -= d; 
-        } else{
+        } else
+		{
             d = left_elements; 
             sender += 1; 
             left_elements = initial_sizes[sender]; 
@@ -386,8 +377,10 @@ void Set_Receiving_Size(int comm_size, int myrank, int* initial_sizes, int* fina
         total_residuals -= d; 
     }
     residual = final_sizes[myrank];
-    while(residual > 0){
-        if(residual < left_elements){
+    while(residual > 0)
+	{
+        if(residual < left_elements)
+		{
             d = residual; 
             left_elements -= d; 
             recvcounts[sender] = d; 
@@ -429,8 +422,6 @@ int main( int  argc, char **argv)
 	}
 // implement
 	srand((rank*3+1)*time(NULL));
-    
-
 	//create local array and generate element
 
 	int* local_elem;

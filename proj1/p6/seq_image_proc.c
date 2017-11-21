@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 	PPMImage img;
 	fnReadPPM(argv[1], &img);
 	gettimeofday(&Tstart, NULL); 
-
+	
 	//implement
 
 	img_flip_horizentally(&img);
@@ -77,10 +77,11 @@ int main(int argc, char *argv[])
 
 
 	//
+
 	gettimeofday(&Tend, NULL);
 	getElapsedTime(Tstart, Tend);
 
 	fnWritePPM(argv[2], &img);
 	fnClosePPM(&img);
-
+	
 }

@@ -43,7 +43,7 @@ int main( int  argc, char **argv)
 
 	//generate random value.
     localdata = rand()%RANDOM_MAX;
-    printf("[Process %d]: has data %d\n", rank, localdata);
+   // printf("[Process %d]: has data %d\n", rank, localdata);
 
     //MPI_Scan(sendbuf,recvbuf, count, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 	//
@@ -51,7 +51,7 @@ int main( int  argc, char **argv)
 
     //synchronize
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("[Process %d]: has received data: %d \n", rank,localrecv);
+   // printf("[Process %d]: has received data: %d \n", rank,localrecv);
 
 	//print time.
 	if (rank == 0)

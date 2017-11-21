@@ -78,7 +78,7 @@ int main( int  argc, char **argv)
     prefix_sum(rank,num,&data);
 
 
-	printf("[Process %d of %d. ori = %d, result = %d\n",rank, num , ori_data,data);  
+	//printf("[Process %d of %d. ori = %d, result = %d\n",rank, num , ori_data,data);  
 	
 	
 	MPI_Barrier(MPI_COMM_WORLD);
