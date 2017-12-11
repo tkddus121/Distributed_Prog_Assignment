@@ -4,8 +4,10 @@
  * as a guideline for developing your own functions.
  */
 
-#include "time.h"
+#include <signal.h>
 
+#include "time.h"
+#include "time_cnt.h"
 int *
 get_time_1_svc(void *argp, struct svc_req *rqstp)
 {
@@ -14,8 +16,8 @@ get_time_1_svc(void *argp, struct svc_req *rqstp)
 	/*
 	 * insert server code here
 	 */
-
-	return &result;
+	result = timer_get_tod();
+	return &(result);
 }
 
 int *
@@ -27,5 +29,6 @@ delay_1_svc(int *argp, struct svc_req *rqstp)
 	 * insert server code here
 	 */
 
+	timer_delay(*argp);
 	return &result;
 }
