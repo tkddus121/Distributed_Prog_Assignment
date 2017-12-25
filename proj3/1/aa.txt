@@ -1,0 +1,2 @@
+ gcc -g -Wall -fopenmp -o a.out palindromic.c
+

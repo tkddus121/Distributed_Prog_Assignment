@@ -51,7 +51,7 @@ int pth_rwlock_unlock(pth_rwlock_t* rwlock_t  )
 {
 	pthread_mutex_lock( &rwlock_t->mutex );
 
-	if( rwlock_t->is_write == 0)
+	if( !(rwlock_t->is_write) )
 	{
 		// writing..
 		(rwlock_t->read_cnt)--;
@@ -62,15 +62,12 @@ int pth_rwlock_unlock(pth_rwlock_t* rwlock_t  )
 			{
 				rwlock_t->is_write = 1;
 				pthread_cond_signal(&rwlock_t->conv_write);
-			}
-			
+			}	
 		}
 		else
 		{
 			pthread_cond_broadcast(&rwlock_t->conv_read);
-
 		}
-		
 	}
 	else
 	{
@@ -79,8 +76,9 @@ int pth_rwlock_unlock(pth_rwlock_t* rwlock_t  )
 		
 		if( rwlock_t->read_cnt > 0 )
 		{
+			
+			rwlock_t->is_write = 0;
 			pthread_cond_broadcast(&rwlock_t->conv_read);
-			rwlock_t->write_cnt = 0;
 		}
 		else if( rwlock_t->write_cnt <= 0)
 		{
@@ -102,7 +100,15 @@ int pth_rwlock_unlock(pth_rwlock_t* rwlock_t  )
 
 int pth_rwlock_destory(pth_rwlock_t* rwlock_t )
 {
-	if( pthread_mutex_destroy(&rwlock_t->mutex) || pthread_cond_destroy(&rwlock_t->conv_read) || pthread_cond_destroy(&rwlock_t->conv_write) || 0)
+	int fail = 0;
+	fail = fail || pthread_mutex_destroy(&rwlock_t->mutex);
+	fail = fail ||  pthread_cond_destroy(&rwlock_t->conv_read);
+	fail = fail || pthread_cond_destroy(&rwlock_t->conv_write);
+
+//	if( pthread_mutex_destroy(&rwlock_t->mutex) || 
+//			pthread_cond_destroy(&rwlock_t->conv_read) || 
+//			pthread_cond_destroy(&rwlock_t->conv_write) || 0)
+	if(fail)
 		return -1;
 	else
 		return 0;
